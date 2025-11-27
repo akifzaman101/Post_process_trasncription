@@ -1,0 +1,12 @@
+asgiref==3.11.0
+boto3==1.41.5
+botocore==1.41.5
+Django==5.2.8
+djangorestframework==3.16.1
+jmespath==1.0.1
+python-dateutil==2.9.0.post0
+s3transfer==0.15.0
+six==1.17.0
+sqlparse==0.5.3
+tzdata==2025.2
+urllib3==2.5.0
