@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework import status
 from transcription.services.s3_services import S3Service
-
+from transcription.services.merge_service import MergeService
 
 class UploadChunkView(APIView):
     parser_classes = [MultiPartParser, FormParser]
@@ -17,9 +17,9 @@ class UploadChunkView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        upload_id = request.data.get("upload_id")
-        if not upload_id:
-            upload_id = str(uuid.uuid4())
+        session_id = request.data.get("session_id")
+        if not session_id:
+            session_id = str(uuid.uuid4())
         
         chunk_index = request.data.get("chunk_index")
         if chunk_index is None:
@@ -38,7 +38,7 @@ class UploadChunkView(APIView):
         
         chunk_name = f"{chunk_index_int:06d}"
         
-        path = f"recordings/{upload_id}/chunk_{chunk_name}.webm"
+        path = f"recordings/{session_id}/Recording_Chunks/chunk_{chunk_name}.webm"
         
         try:
             S3Service().upload_chunks(file_obj, path)
@@ -53,9 +53,29 @@ class UploadChunkView(APIView):
         return Response(
             {
                 "message": "Chunk uploaded successfully.",
-                "upload_id": upload_id,
+                "session_id": session_id,
             },
             status=status.HTTP_200_OK
         )
         
+
+class MergeChunksView(APIView):
+    
+    def post(self, request):
+        session_id = request.data.get("session_id")
+
+        if not session_id:
+            return Response({"error": "session_id is required"}, status=400)
+
+        try:
+            final_path = MergeService().merge_audio_chunks(session_id)
+            return Response({
+                "message": "Merging completed",
+                "merged_file_path": final_path
+            })
+        except Exception as e:
+            return Response({
+                "error": "Merging failed",
+                "details": str(e)
+            }, status=500)
         
